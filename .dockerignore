@@ -1,0 +1,5 @@
+# Ignore everything except your current project folder files
+*.pyc
+__pycache__
+.git
+old_projects/
