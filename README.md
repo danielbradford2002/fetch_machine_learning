@@ -2,121 +2,113 @@
 
 ## Overview
 
-This project implements a multi-task learning framework using a sentence transformer to address two NLP tasks:
-- **Task A: Sentence Classification** – Classify sentences into five predefined categories: Sports, Business, Entertainment, Technology, and Politics.
-- **Task B: Sentiment Analysis** – Determine sentiment with three categories: Negative, Neutral, and Positive.
+Hi, I’m Daniel and this project is my implementation of a multi-task learning framework using a sentence transformer for the Fetch technical take home challenge. I built it to tackle two natural language tasks:
+- **Task A: Sentence Classification** – where I classify sentences into five categories (Sports, Business, Entertainment, Technology, Politics).
+- **Task B: Sentiment Analysis** – where I determine if a sentence has Negative, Neutral, or Positive sentiment.
 
-The model uses **DistilBERT** as its backbone to produce fixed-length sentence embeddings via mean pooling. Two task-specific linear heads then map these embeddings to the respective outputs.
+I use **DistilBERT** as the backbone to generate fixed-length sentence embeddings by applying mean pooling on the token representations. Then, two simple linear layers (one for each task) convert these embeddings into predictions.
 
-The project is organized into several modules:
+The project is split into several modules:
 - `src/train.py`: Contains the training loop, data splitting (train/validation/test), and CSV logging.
-- `src/evaluate.py`: Provides functions for evaluating the model on validation and test data.
-- `src/data_utils.py`: Contains helper functions for splitting data and batching, along with synthetic datasets.
-- `models/multi_task_model.py`: Defines the multi-task model architecture.
+- `src/evaluate.py`: Has functions to evaluate the model on validation and test data.
+- `src/data_utils.py`: Provides helper functions for splitting data and batching, along with my synthetic datasets.
+- `models/multi_task_model.py`: Defines the overall multi-task model architecture.
 
-In addition, the project is containerized with Docker to ensure reproducibility across environments, and the environment is specified via `requirements.txt`.
+I’ve also containerized the project with Docker to ensure it runs smoothly on any system, and I’ve specified all dependencies in a `requirements.txt` file.
 
 ---
 
 ## Task 1: Sentence Transformer Implementation
 
 **Objective:**  
-Implement a sentence transformer that encodes variable-length sentences into fixed-length embeddings.
+I needed to implement a sentence transformer that takes variable-length sentences and encodes them into fixed-length vectors.
 
-**Approach:**  
-- **Backbone:** The project uses a pretrained DistilBERT model due to its balance of speed and performance.
-- **Pooling Strategy:** Mean pooling is applied over the transformer’s token embeddings to obtain a fixed-size representation.
-- **Testing:** Sample sentences are processed through the model to validate the embedding extraction.
+**What I Did:**  
+- **Backbone:** I chose DistilBERT for its balance between performance and efficiency.
+- **Pooling Strategy:** I used mean pooling over the token embeddings from the transformer to get a fixed-size vector.
+- **Testing:** I ran a few sample sentences through the model to ensure the embeddings looked reasonable.
 
-*Key Decisions:*  
-- Mean pooling was chosen for simplicity and effectiveness.
-- DistilBERT provides a compact yet powerful representation for English text.
+**My Thoughts:**  
+I went with mean pooling because it’s simple and effective, and DistilBERT was a natural choice due to its compact size while still providing strong performance on English text.
 
 ---
 
 ## Task 2: Multi-Task Learning Expansion
 
 **Objective:**  
-Expand the transformer model to handle both sentence classification and sentiment analysis.
+I expanded the transformer model to handle both sentence classification and sentiment analysis simultaneously.
 
-**Approach:**  
-- **Shared Backbone:** The DistilBERT encoder is shared across tasks.
-- **Task-Specific Heads:**  
-  - **Classification Head:** A linear layer producing outputs for 5 classes.  
-  - **Sentiment Head:** A linear layer producing outputs for 3 sentiment categories.
+**What I Did:**  
+- I kept the DistilBERT encoder as a shared backbone.
+- Then I added two separate linear heads:
+  - One head for the 5-class sentence classification task.
+  - Another head for the 3-class sentiment analysis task.
 
-*Key Decisions:*  
-- Sharing the transformer backbone allows the model to leverage common language representations while the separate heads fine-tune task-specific mappings.
+**My Thoughts:**  
+By sharing the backbone, I leverage the same underlying language understanding for both tasks, while the separate heads allow each task to fine-tune its own mapping. This setup strikes a balance between efficiency and task specialization.
 
 ---
 
 ## Task 3: Training Considerations and Transfer Learning
 
 **Objective:**  
-Discuss different training scenarios and the transfer learning approach.
+This part was all about exploring different training strategies and thinking about transfer learning.
 
-**Scenarios Considered:**
+**Scenarios I Considered:**
 
 1. **Entire Network Frozen:**  
-   - *Implication:* The model relies entirely on pretrained weights, and only a forward pass is performed.  
-   - *Pros:* Faster training and less risk of overfitting with very limited data.  
-   - *Cons:* No adaptation to the specific tasks, possibly leading to suboptimal performance if the target domain is different.
+   - *What it Means:* No layers are updated; the model uses only the pretrained weights.
+   - *Pros:* Training is very fast and there’s minimal risk of overfitting when data is scarce.
+   - *Cons:* The model can’t adapt to my specific tasks, which might limit performance if my data is quite different from what DistilBERT was trained on.
 
 2. **Transformer Backbone Frozen:**  
-   - *Implication:* The DistilBERT layers are fixed while the task-specific heads are trained.  
-   - *Pros:* Preserves general language understanding and speeds up training; effective when the tasks are similar to the pretraining data.
-   - *Cons:* Limited domain adaptation if the tasks require more specialized knowledge.
+   - *What it Means:* The DistilBERT layers remain fixed while only the task-specific heads are updated.
+   - *Pros:* This approach is common when you have limited data; it preserves the general language knowledge while letting the heads learn the task-specific mappings.
+   - *Cons:* It might not capture domain-specific nuances if my tasks need more specialized understanding.
 
 3. **One Task-Specific Head Frozen:**  
-   - *Implication:* One head (for example, classification) is left unchanged while the other head and the backbone are fine-tuned.
-   - *Pros:* Useful if one task already has strong performance and you want to preserve it while adapting the other.
-   - *Cons:* May prevent the frozen head from adjusting to subtle changes in the shared representations.
+   - *What it Means:* One of the task heads (say, classification) is kept unchanged while the other head and the backbone are fine-tuned.
+   - *Pros:* This can be useful if one task is already performing well and I want to preserve its accuracy while adapting the other.
+   - *Cons:* It might limit the model’s ability to adjust to new patterns if the frozen head really needs to learn more.
 
 **Transfer Learning Approach:**
 
-- **Pretrained Model Choice:** DistilBERT was selected for its efficiency and strong performance.
-- **Layer Freezing Strategy:**  
-  - In scenarios with limited data, freezing the backbone and updating only the heads can help avoid overfitting.
-  - For tasks that differ significantly from the pretraining domain, selectively unfreezing some top layers may yield better performance.
-  
-*Key Decisions:*  
-- The balance between freezing and fine-tuning depends on available data and task similarity.
-- Experimentation with these strategies (e.g., freezing the entire backbone vs. partial unfreezing) can help determine the optimal approach.
+- I chose **DistilBERT** because it’s fast and effective.
+- For freezing, the idea is to freeze layers when you have very limited data or when your tasks are similar to the pretrained domain. On the other hand, if my tasks are very different or I have enough data, I might unfreeze more layers (or even the whole model) to allow deeper adaptation.
+
+**My Thoughts:**  
+I experimented with different freezing strategies in my head (and I discuss these more in my code comments). Finding the right balance between preserving pretrained knowledge and adapting to new tasks is key, and it depends a lot on the data and the specific tasks.
 
 ---
 
 ## Task 4: Training Loop Implementation
 
 **Objective:**  
-Develop a training loop that handles multi-task learning, including data splitting and metric tracking.
+I needed to build a training loop that supports multi-task learning with proper data splitting and metric logging.
 
-**Approach:**  
-- **Data Splitting:** The synthetic data is split into 70% training, 15% validation, and 15% test sets.
-- **Batch Processing:**  
-  - The training loop processes classification and sentiment data separately so that each head is updated with its correct labels.
-- **Metrics & Logging:**  
-  - After each epoch, the average loss for each task is computed.
-  - The model is evaluated on the validation set, and metrics (accuracy and loss) are logged to a CSV file.
-  - A final evaluation is performed on the test set to gauge generalization.
+**What I Did:**  
+- **Data Splitting:** I split my synthetic data into 70% training, 15% validation, and 15% test sets.
+- **Batch Processing:** I process classification and sentiment data in separate batches so that each head is updated using its own correct labels.
+- **Metrics & Logging:** After each epoch, I compute the average loss for each task and evaluate the model on the validation set. These metrics are logged to a CSV file, and a final evaluation on the test set gives me an unbiased measure of performance.
 
-*Key Decisions:*  
-- Processing tasks separately in batches prevents the model from learning with dummy labels.
-- Logging metrics enables tracking progress and comparing different training strategies.
+**My Thoughts:**  
+Separating the tasks during training ensures that each head gets accurate signals, and logging the metrics helps me track the model’s progress over time.
 
 ---
 
 ## Performance Results and Future Improvements
 
 **Current Results:**  
-- **Training and validation outputs** show a gradual decrease in loss and improvement in accuracy for both classification and sentiment tasks.
-- **Final test performance:** Classification Accuracy = 0.89, Sentiment Accuracy = 0.93
+- My training and validation outputs show that loss decreases steadily, with final test performance reaching around:
+  - **Classification Accuracy:** 89%
+  - **Sentiment Accuracy:** 93%
 
-**Potential Improvements:**  
-- **Data Quantity & Quality:** Increasing the amount of training data or using real-world datasets could further improve model performance.
-- **Hyperparameter Tuning:** Experiment with different learning rates, batch sizes, and number of epochs.
-- **Layer Freezing Experiments:** Test scenarios where different parts of the model are frozen/unfrozen to optimize performance.
-- **Pooling Strategy:** Explore alternative pooling methods (e.g., attention-based pooling) to potentially enhance the quality of the sentence embeddings.
-- **Fine-Tuning:** Consider fine-tuning the backbone on a domain-specific corpus if the tasks are in a specialized domain.
+**Areas for Improvement:**  
+- **Data Quality and Quantity:** Using larger, real-world datasets could further improve performance.
+- **Hyperparameter Tuning:** There’s room to experiment with different learning rates, batch sizes, and numbers of epochs.
+- **Layer Freezing Strategies:** I plan to explore more nuanced freezing/unfreezing strategies to see if further gains can be made.
+- **Pooling Methods:** Alternative pooling strategies (like attention-based pooling) might enhance the quality of the embeddings.
+- **Fine-Tuning:** More extensive fine-tuning on domain-specific data could yield additional improvements.
 
 ---
 
@@ -125,75 +117,45 @@ Develop a training loop that handles multi-task learning, including data splitti
 ### Docker Containerization
 
 **Purpose:**  
-- Ensures a consistent and reproducible runtime environment.
-- Simplifies deployment across different systems.
+Using Docker makes my project environment consistent and reproducible across different systems.
 
 **How to Build and Run:**
 
 1. **Build the Docker Image:**
-bash:
-   docker build -t multi-task-nlp .
+   bash:docker build -t multi-task-nlp .
+
 Run the Docker Container:
-bash
-docker run --rm multi-task-nlp
+bash: docker run --rm multi-task-nlp
 Dockerfile Details:
 
-Base Image: Uses python:3.11-slim for a lightweight, up-to-date environment.
-WORKDIR: Sets the working directory to /app and sets PYTHONPATH to /app so that the code in models/ and src/ is discoverable.
-Dependency Installation: Copies requirements.txt and installs dependencies.
-Code Copy: Copies the entire project into the container.
-CMD: Defaults to running the training script.
+**Dockerfile Highlights:**
+
+I use python:3.11-slim as the base image for a lightweight, modern environment.
+The working directory is set to /app and PYTHONPATH is configured so that my models/ and src/ directories are correctly discovered.
+Dependencies from requirements.txt are installed, and the entire project is copied into the container.
+The default command runs my training script.
 Environment Setup & requirements.txt
+Purpose:
+The requirements.txt file allows others to recreate the exact Python environment for this project.
 
+**How I Created It:**
 
-**Creating requirements.txt:**
+I activated my virtual environment:
+bash: source venv/bin/activate
+I installed all the necessary libraries (like torch, transformers, etc.).
+I generated the file with:
+bash: pip freeze > requirements.txt
+This file lists the exact package versions used, ensuring reproducibility.
 
-**Activate your virtual environment:**
-bash:
-    source venv/bin/activate
+**Conclusion**
+This project showcases my implementation of a multi-task sentence transformer using DistilBERT. I addressed the following:
 
-**Install Dependencies:**
-Ensure all required packages are installed (e.g., torch, transformers, etc.).
-Generate the File:
-bash:
-    pip freeze > requirements.txt
+Task 1: Building a sentence transformer with mean pooling.
+Task 2: Expanding the model to handle both sentence classification and sentiment analysis.
+Task 3: Exploring training considerations such as various freezing strategies and transfer learning approaches.
+Task 4: Implementing a robust training loop with a proper train/validation/test split and logging metrics.
+While the current results are promising (with test accuracies of 89% for classification and 93% for sentiment), there’s still room for improvement, especially in terms of data quality, hyperparameter tuning, and exploring alternative pooling and freezing strategies.
 
-This creates a file with pinned versions of all packages.
-**Review and Clean:**
-Optionally, remove unnecessary packages to keep the file focused on your project.
-Example requirements.txt:
-certifi==2025.1.31
-charset-normalizer==3.4.1
-filelock==3.17.0
-fsspec==2025.2.0
-huggingface-hub==0.28.1
-idna==3.10
-Jinja2==3.1.5
-MarkupSafe==3.0.2
-mpmath==1.3.0
-networkx==2.8.8
-numpy==2.2.3
-packaging==24.2
-PyYAML==6.0.2
-regex==2024.11.6
-requests==2.32.3
-safetensors==0.5.2
-sympy==1.13.1
-tokenizers==0.21.0
-torch==2.6.0
-tqdm==4.67.1
-transformers==4.48.3
-typing_extensions==4.12.2
-urllib3==2.3.0
+The project is fully containerized with Docker for consistency, and the environment is managed via requirements.txt for easy reproducibility.
 
-## Conclusion
-
-**This project demonstrates:** 
-
-Task 1: Implementation of a sentence transformer using DistilBERT and mean pooling.
-Task 2: Expansion to multi-task learning with separate heads for classification and sentiment analysis.
-Task 3: Detailed training considerations, including freezing strategies and transfer learning rationale.
-Task 4: A robust training loop with proper train/validation/test splits, metric logging, and evaluation.
-Future improvements include enhancing data quality and quantity, hyperparameter tuning, further experiments with layer freezing, and exploring alternative pooling strategies.
-
-The project is containerized with Docker for consistency, and the environment is managed via requirements.txt for reproducibility.
+Feel free to check out the code, and thanks so much for taking the time to review my work. I cannot wait to hear back from the Fetch team!
