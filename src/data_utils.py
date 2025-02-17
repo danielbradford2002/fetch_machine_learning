@@ -1,13 +1,17 @@
-# src/data_utils.py
-
 import random
 
 def split_train_val(full_data, train_ratio=0.8):
     """
-    Splits the data into train and validation sets based on train_ratio.
-    Returns train_data, val_data.
+    Splits the provided data into training and validation sets.
+    
+    Args:
+        full_data: The complete dataset (a list of examples).
+        train_ratio: The fraction of data to use for training.
+    
+    Returns:
+        A tuple (train_data, val_data).
     """
-    random.shuffle(full_data)  # shuffle in place
+    random.shuffle(full_data)  # Shuffle in place for randomness.
     split_index = int(len(full_data) * train_ratio)
     train_data = full_data[:split_index]
     val_data = full_data[split_index:]
@@ -15,8 +19,15 @@ def split_train_val(full_data, train_ratio=0.8):
 
 def split_data_3way(full_data, train_ratio=0.7, val_ratio=0.15):
     """
-    Splits the data into train/val/test sets based on the given ratios.
-    e.g. train_ratio=0.7, val_ratio=0.15 => test_ratio=0.15
+    Splits data into training, validation, and test sets.
+    
+    Args:
+        full_data: The complete dataset.
+        train_ratio: Fraction of data for training.
+        val_ratio: Fraction of data for validation.
+    
+    Returns:
+        A tuple (train_data, val_data, test_data) where test_data is the remaining data.
     """
     random.shuffle(full_data)
     total = len(full_data)
@@ -26,16 +37,24 @@ def split_data_3way(full_data, train_ratio=0.7, val_ratio=0.15):
     train_data = full_data[:train_size]
     val_data = full_data[train_size : train_size + val_size]
     test_data = full_data[train_size + val_size :]
-
     return train_data, val_data, test_data
 
 def batch_iter(data, batch_size=8):
     """
-    Simple generator that yields data in batches.
+    Generator that yields successive batches from data.
+    
+    Args:
+        data: A list of data examples.
+        batch_size: Number of examples per batch.
+    
+    Yields:
+        A slice of the data list with length up to batch_size.
     """
     for i in range(0, len(data), batch_size):
         yield data[i : i + batch_size]
 
+# Example synthetic data for classification and sentiment tasks.
+# In a real project, you might load this from a file.
 
 classification_data = [
 

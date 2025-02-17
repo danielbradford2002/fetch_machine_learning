@@ -4,34 +4,38 @@ from models.multi_task_model import MultiTaskModel
 
 def evaluate_model(model, tokenizer, eval_data_class, eval_data_senti):
     """
-    Evaluate classification and sentiment tasks separately and print accuracy.
+    Evaluate both the classification and sentiment tasks.
     
-    :param model: An instance of MultiTaskModel (already loaded)
-    :param tokenizer: The tokenizer matching the model
-    :param eval_data_class: List of (text, label) for classification
-    :param eval_data_senti: List of (text, label) for sentiment
+    This function computes the accuracy for each task and prints the results.
+    
+    Args:
+        model: The trained MultiTaskModel.
+        tokenizer: The tokenizer used for encoding input sentences.
+        eval_data_class: List of (text, label) for classification.
+        eval_data_senti: List of (text, label) for sentiment analysis.
+    
+    Returns:
+        A tuple (accuracy_class, accuracy_senti).
     """
     model.eval()
     correct_class, total_class = 0, 0
     correct_senti, total_senti = 0, 0
 
-    # Turn off gradient calculations for evaluation
+    # Disable gradients for evaluation
     with torch.no_grad():
-        # Evaluate classification
+        # Evaluate classification task
         for text, labelA in eval_data_class:
             inputs = tokenizer([text], return_tensors="pt", padding=True, truncation=True)
-            logitsA, logitsB = model(inputs["input_ids"], inputs["attention_mask"])
-            # Argmax for classification
+            logitsA, _ = model(inputs["input_ids"], inputs["attention_mask"])
             predA = logitsA.argmax(dim=1).item()
             if predA == labelA:
                 correct_class += 1
             total_class += 1
 
-        # Evaluate sentiment
+        # Evaluate sentiment task
         for text, labelB in eval_data_senti:
             inputs = tokenizer([text], return_tensors="pt", padding=True, truncation=True)
-            logitsA, logitsB = model(inputs["input_ids"], inputs["attention_mask"])
-            # Argmax for sentiment
+            _, logitsB = model(inputs["input_ids"], inputs["attention_mask"])
             predB = logitsB.argmax(dim=1).item()
             if predB == labelB:
                 correct_senti += 1
@@ -45,26 +49,20 @@ def evaluate_model(model, tokenizer, eval_data_class, eval_data_senti):
     return accuracy_class, accuracy_senti
 
 def main():
-    # 1. (Optionally) load a saved model checkpoint or re-initialize the model
-    # Example: If you saved your trained model's weights to "model_weights.pt", you can do:
-    # model = MultiTaskModel("distilbert-base-uncased", 5, 2)
-    # model.load_state_dict(torch.load("model_weights.pt"))
-
+    # Example usage: initialize model and tokenizer, then run evaluation on sample data.
     model_name = "distilbert-base-uncased"
-    model = MultiTaskModel(model_name, 5, 2)  # 5 classes for classification, 2 for sentiment
+    model = MultiTaskModel(model_name, 5, 2)  # Note: adjust number of classes if needed.
     tokenizer = AutoTokenizer.from_pretrained(model_name)
 
-    # 2. Example eval data (could also be loaded from a file)
     eval_data_class = [
-        ("The senator introduced a bill targeting tax reform.", 4),   # politics
-        ("The soccer team won the championship.", 0),                # sports
+        ("The senator introduced a bill targeting tax reform.", 4),  # politics
+        ("The soccer team won the championship.", 0),               # sports
     ]
     eval_data_senti = [
-        ("I hated the service at that restaurant; it was awful.", 1), # negative
-        ("I absolutely love this movie, it's fantastic!", 0),         # positive
+        ("I hated the service at that restaurant; it was awful.", 1),  # negative (assuming mapping: 0=negative, 1=neutral, 2=positive)
+        ("I absolutely love this movie, it's fantastic!", 0),         # positive (if reversed, adjust accordingly)
     ]
 
-    # 3. Call the evaluation function
     evaluate_model(model, tokenizer, eval_data_class, eval_data_senti)
 
 if __name__ == "__main__":
