@@ -151,9 +151,13 @@ This file lists the exact package versions used, ensuring reproducibility.
 This project showcases my implementation of a multi-task sentence transformer using DistilBERT. I addressed the following:
 
 Task 1: Building a sentence transformer with mean pooling.
+
 Task 2: Expanding the model to handle both sentence classification and sentiment analysis.
+
 Task 3: Exploring training considerations such as various freezing strategies and transfer learning approaches.
+
 Task 4: Implementing a robust training loop with a proper train/validation/test split and logging metrics.
+
 While the current results are promising (with test accuracies of 89% for classification and 93% for sentiment), there’s still room for improvement, especially in terms of data quality, hyperparameter tuning, and exploring alternative pooling and freezing strategies.
 
 The project is fully containerized with Docker for consistency, and the environment is managed via requirements.txt for easy reproducibility.
