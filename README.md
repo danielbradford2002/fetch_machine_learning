@@ -147,7 +147,7 @@ I generated the file with:
 bash: pip freeze > requirements.txt
 This file lists the exact package versions used, ensuring reproducibility.
 
-**Conclusion**
+### Conclusion
 This project showcases my implementation of a multi-task sentence transformer using DistilBERT. I addressed the following:
 
 Task 1: Building a sentence transformer with mean pooling.
